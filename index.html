@@ -90,8 +90,8 @@
     }
 
     .controlBtn{
-      width:64px;
-      height:56px;
+      width:72px;
+      height:58px;
       border:none;
       border-radius:14px;
       cursor:pointer;
@@ -102,40 +102,38 @@
       touch-action:manipulation;
       user-select:none;
       position:relative;
-    }
-
-    .controlBtn:disabled{
-      opacity:.45;
-      cursor:default;
-      box-shadow:none;
-    }
-
-    .playBtn{
       background:var(--blue);
     }
 
-    .stopBtn{
-      background:var(--red);
-    }
-
-    /* Play-Symbol ohne Text */
-    .playBtn::before{
+    /* Play-Symbol */
+    .controlBtn::before{
       content:"";
       width:0;
       height:0;
-      border-top:13px solid transparent;
-      border-bottom:13px solid transparent;
-      border-left:22px solid #fff;
+      border-top:14px solid transparent;
+      border-bottom:14px solid transparent;
+      border-left:23px solid #fff;
       margin-left:5px;
     }
 
-    /* Stopp-Symbol ohne Text */
-    .stopBtn::before{
+    /* Pause-Zustand */
+    .controlBtn.pauseState::before,
+    .controlBtn.pauseState::after{
       content:"";
-      width:24px;
-      height:24px;
+      width:9px;
+      height:28px;
       background:#fff;
       border-radius:3px;
+      border:none;
+      margin:0 4px;
+    }
+
+    .controlBtn.pauseState::before{
+      margin-left:0;
+    }
+
+    .controlBtn.pauseState::after{
+      display:block;
     }
 
     /* Rechte Seite: Auszeit-Karte */
@@ -145,14 +143,9 @@
       padding:10px;
       box-shadow:var(--shadow);
       display:grid;
-
-      /* Plus, Auszeit-Anzeige und Minus direkt untereinander */
       grid-template-rows:auto auto auto;
       align-content:center;
-
-      /* Abstand zwischen Plus/Anzeige/Minus */
       gap:4px;
-
       align-items:center;
       justify-items:center;
     }
@@ -246,8 +239,7 @@
       </div>
 
       <div class="btnRow">
-        <button id="playBtn" class="controlBtn playBtn" aria-label="Timer starten"></button>
-        <button id="stopBtn" class="controlBtn stopBtn" aria-label="Timer stoppen"></button>
+        <button id="mainBtn" class="controlBtn" aria-label="Timer starten"></button>
       </div>
     </div>
 
@@ -298,8 +290,7 @@
     const centerColon = document.getElementById('centerColon');
     const centerSec = document.getElementById('centerSec');
 
-    const playBtn = document.getElementById('playBtn');
-    const stopBtn = document.getElementById('stopBtn');
+    const mainBtn = document.getElementById('mainBtn');
 
     const breakPlus = document.getElementById('breakPlus');
     const breakMinus = document.getElementById('breakMinus');
@@ -670,7 +661,13 @@
 
       updateDial(elapsed);
 
-      playBtn.disabled = state.running;
+      if(state.running){
+        mainBtn.classList.add('pauseState');
+        mainBtn.setAttribute('aria-label', 'Timer pausieren');
+      }else{
+        mainBtn.classList.remove('pauseState');
+        mainBtn.setAttribute('aria-label', 'Timer starten');
+      }
     }
 
     let ticker = null;
@@ -680,6 +677,7 @@
         return;
       }
 
+      // Wenn der Timer bereits fertig war, startet ein neuer Durchlauf.
       if(state.started && currentElapsed() >= state.totalSec){
         state.started = false;
         state.t0 = 0;
@@ -696,6 +694,13 @@
         state.lastPhase = state.workSec > 0
           ? 'work'
           : (state.totalSec > 0 ? 'break' : 'done');
+
+      }else{
+        // Exakt an der pausierten Stelle fortsetzen
+        if(state.pauseStart){
+          state.pausedAcc += Date.now() - state.pauseStart;
+          state.pauseStart = 0;
+        }
       }
 
       state.running = true;
@@ -709,24 +714,28 @@
       updateUI();
     }
 
-    function stop(){
+    function pause(){
+      if(!state.running){
+        return;
+      }
+
+      state.running = false;
+      state.pauseStart = Date.now();
+
       if(ticker){
         clearInterval(ticker);
         ticker = null;
       }
 
-      state.started = false;
-      state.running = false;
-      state.t0 = 0;
-      state.pausedAcc = 0;
-      state.pauseStart = 0;
-
-      state.lastPhase = state.workSec > 0
-        ? 'work'
-        : (state.totalSec > 0 ? 'break' : 'done');
-
       updateUI();
-      save();
+    }
+
+    function toggleTimer(){
+      if(state.running){
+        pause();
+      }else{
+        start();
+      }
     }
 
     function tick(){
@@ -923,8 +932,7 @@
     addRepeater(breakPlus, () => stepBreak(+1));
     addRepeater(breakMinus, () => stepBreak(-1));
 
-    playBtn.addEventListener('click', start);
-    stopBtn.addEventListener('click', stop);
+    mainBtn.addEventListener('click', toggleTimer);
 
     updateUI();
   </script>
