@@ -105,7 +105,6 @@
       background:var(--blue);
     }
 
-    /* Play-Symbol */
     .controlBtn::before{
       content:"";
       width:0;
@@ -116,7 +115,6 @@
       margin-left:5px;
     }
 
-    /* Pause-Symbol */
     .controlBtn.pauseState::before,
     .controlBtn.pauseState::after{
       content:"";
@@ -136,7 +134,6 @@
       display:block;
     }
 
-    /* Rechte Seite: Auszeit-Karte */
     .sideCard{
       background:var(--card);
       border-radius:14px;
@@ -571,20 +568,14 @@
       const gripROuter = (rO + rI) / 2;
       const gripRInner = (r2O + r2I) / 2;
 
-      // Wenn der zweite rote Innenring sichtbar ist,
-      // sitzt der blaue Griff am Ende dieses inneren roten Rings.
       if(degRedInner > 0){
         return polar(cx, cy, gripRInner, degRedInner);
       }
 
-      // Wenn nur der äußere rote Bereich sichtbar ist,
-      // sitzt der blaue Griff am Ende dieses äußeren roten Bereichs.
       if(degRedOuter > 0){
         return polar(cx, cy, gripROuter, degGreen + degRedOuter);
       }
 
-      // Wenn kein roter Bereich mehr vorhanden ist,
-      // sitzt der blaue Griff am Ende des grünen Restbereichs.
       return polar(cx, cy, gripROuter, degGreen);
     }
 
@@ -679,10 +670,6 @@
       const gripROuter = (rO + rI) / 2;
 
       const pB = polar(cx, cy, gripROuter, boundaryDeg);
-
-      // Wichtig:
-      // Der blaue Griff sitzt immer am aktuellen Ende des roten Bereichs.
-      // Die Position wird auch dann aktualisiert, wenn der Griff unsichtbar ist.
       const pT = getBlueHandlePosition(elapsed);
 
       handleBoundary.setAttribute('cx', pB.x.toFixed(2));
@@ -716,7 +703,6 @@
         return;
       }
 
-      // Wenn der Timer bereits fertig war, startet ein neuer Durchlauf.
       if(state.started && currentElapsed() >= state.totalSec){
         state.started = false;
         state.t0 = 0;
@@ -735,7 +721,6 @@
           : (state.totalSec > 0 ? 'break' : 'done');
 
       }else{
-        // Exakt an der pausierten Stelle fortsetzen.
         if(state.pauseStart){
           state.pausedAcc += Date.now() - state.pauseStart;
           state.pauseStart = 0;
@@ -846,6 +831,8 @@
     }
 
     function applyDrag(info){
+      const elapsed = currentElapsed();
+
       if(dragMode === 'boundary'){
         const maxBoundaryDeg = Math.min(360, (state.totalSec / 3600) * 360);
         const d = clamp(info.deg, 0, maxBoundaryDeg);
@@ -857,12 +844,53 @@
         state.workSec = state.totalSec - state.breakSec;
 
       }else{
-        const tMin = totalMinFromPointer(info);
+        /*
+          Blauer Griff:
+          Er steht am aktuellen Ende des roten Restbereichs.
+          Beim Verschieben wird die verbleibende Zeit auf volle Minuten gesetzt.
+          Dadurch entstehen keine krummen Sekunden bei der Arbeitszeit.
+        */
+
+        const desiredRemainingMin = totalMinFromPointer(info);
+
+        const maxRemainingWholeMin = Math.max(
+          1,
+          Math.floor((MAX_TOTAL_MIN * 60 - elapsed) / 60)
+        );
+
+        const remainingMin = clamp(
+          desiredRemainingMin,
+          1,
+          maxRemainingWholeMin
+        );
+
+        const desiredRemainingSec = remainingMin * 60;
+
         const keepGreen = state.breakSec;
 
-        state.totalSec = tMin * 60;
-        state.breakSec = Math.min(keepGreen, state.totalSec, 60 * 60);
+        /*
+          totalSec darf hier elapsed + volle Minuten sein.
+          So bleibt die verbleibende Anzeige sauber minutengenau.
+        */
+        state.totalSec = elapsed + desiredRemainingSec;
+
+        state.breakSec = Math.min(
+          keepGreen,
+          desiredRemainingSec,
+          60 * 60
+        );
+
         state.workSec = state.totalSec - state.breakSec;
+
+        /*
+          Sicherheit:
+          Die verbleibende Arbeitszeit wird auf volle Minuten gerundet.
+        */
+        const remWorkSec = Math.max(0, state.workSec - elapsed);
+        const roundedRemWorkSec = Math.round(remWorkSec / 60) * 60;
+
+        state.workSec = elapsed + roundedRemWorkSec;
+        state.totalSec = state.workSec + state.breakSec;
       }
 
       breakBig.textContent = Math.floor(state.breakSec / 60);
