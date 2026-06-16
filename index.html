@@ -1,3 +1,6 @@
+Hier ist der **komplette Code** mit dem geänderten CSS-Block: Die **Plus- und Minus-Bedienfelder** sitzen jetzt **direkt über und unter der kleinen Auszeit-Anzeige**.
+
+```html
 <!doctype html>
 <html lang="de">
 <head>
@@ -13,10 +16,9 @@
       --fg-soft:#334155;
       --card:#fff;
       --shadow:0 6px 18px rgba(0,0,0,.06);
-
-      --red:#ef4444;       /* ROT = Arbeitszeit */
-      --red2:#b91c1c;      /* Zweiter roter Ring */
-      --green:#16a34a;     /* GRÜN = Auszeit */
+      --red:#ef4444;
+      --red2:#b91c1c;
+      --green:#16a34a;
       --black:#111;
       --blue:#2563eb;
     }
@@ -31,13 +33,9 @@
       }
     }
 
-    *{
-      box-sizing:border-box;
-    }
+    *{ box-sizing:border-box; }
 
-    html,body{
-      height:100%;
-    }
+    html,body{ height:100%; }
 
     body{
       margin:0;
@@ -59,7 +57,6 @@
       gap:10px;
     }
 
-    /* Linke Seite: Uhr */
     .dialCard{
       background:var(--card);
       border-radius:14px;
@@ -121,8 +118,14 @@
       padding:10px;
       box-shadow:var(--shadow);
       display:grid;
-      grid-template-rows:auto 1fr auto;
-      gap:6px;
+
+      /* Plus, Auszeit-Anzeige und Minus direkt untereinander */
+      grid-template-rows:auto auto auto;
+      align-content:center;
+
+      /* Abstand zwischen Plus/Anzeige/Minus */
+      gap:4px;
+
       align-items:center;
       justify-items:center;
     }
@@ -173,27 +176,21 @@
 <body>
   <div class="layout" aria-label="Timer Oberfläche">
 
-    <!-- Linke Hälfte: 119-Minuten-Uhr -->
     <div class="dialCard">
       <div class="dialWrap">
         <svg id="dial" class="dial" viewBox="0 0 220 220" role="img" aria-label="Eieruhr mit 119-Minuten-Skala">
 
-          <!-- Zifferblatt und Ticks -->
           <circle cx="110" cy="110" r="104" fill="currentColor" opacity="0.06"/>
           <circle cx="110" cy="110" r="100" fill="#fff" stroke="currentColor" stroke-width="3"/>
           <g id="ticks"></g>
 
-          <!-- Äußerer Ring: GRÜN = Auszeit, ROT = Arbeitszeit bis 60 Minuten -->
           <path id="arcGreen" fill="var(--green)" opacity="0.92"/>
           <path id="arcRed" fill="var(--red)" opacity="0.92"/>
 
-          <!-- Innerer Kreis: Farbe je Phase -->
           <circle id="innerFill" cx="110" cy="110" r="72" fill="transparent" opacity="0.92"/>
 
-          <!-- Zweiter roter Innenring für Minuten 61–119 -->
           <path id="arcRed2" fill="var(--red2)" opacity="0.95"/>
 
-          <!-- Zentrum: Label + Countdown MM:SS -->
           <text id="centerLabel" x="110" y="98" text-anchor="middle"
                 style="font: 800 18px/1.1 ui-sans-serif, system-ui, -apple-system, Segoe UI; fill: #fff;">
             ARBEITSZEIT
@@ -214,23 +211,19 @@
             00
           </text>
 
-          <!-- Griffe -->
           <circle id="handleBoundary" r="10" fill="var(--black)" stroke="#fff" stroke-width="3" style="display:none" />
           <circle id="handleTotal" r="10" fill="var(--blue)" stroke="#fff" stroke-width="3" style="display:none" />
 
-          <!-- Innenkreis-Ring -->
           <circle cx="110" cy="110" r="72" fill="transparent" stroke="currentColor" stroke-width="2"/>
         </svg>
       </div>
 
-      <!-- Start + Reset -->
       <div class="btnRow">
         <button id="startBtn" class="startBtn" aria-label="Start/Pause">Start</button>
         <button id="resetBtn" class="startBtn ghost" aria-label="Zurücksetzen auf 30/7">Reset</button>
       </div>
     </div>
 
-    <!-- Rechte Hälfte: Auszeit einstellen -->
     <div class="sideCard" aria-label="Auszeit einstellen">
       <button id="breakPlus" class="bigStep" aria-label="Auszeit plus 1 Minute">+</button>
 
@@ -261,18 +254,17 @@
   </div>
 
   <script>
-    // DOM
     const dial = document.getElementById('dial');
     const ticksG = document.getElementById('ticks');
 
-    const arcGreen = document.getElementById('arcGreen'); // GRÜN = Auszeit
-    const arcRed = document.getElementById('arcRed');     // ROT = Arbeitszeit äußerer Ring
-    const arcRed2 = document.getElementById('arcRed2');   // ROT = Arbeitszeit innerer Ring 61–119
+    const arcGreen = document.getElementById('arcGreen');
+    const arcRed = document.getElementById('arcRed');
+    const arcRed2 = document.getElementById('arcRed2');
 
     const innerFill = document.getElementById('innerFill');
 
-    const handleBoundary = document.getElementById('handleBoundary'); // schwarzer Griff = Ende Grün
-    const handleTotal = document.getElementById('handleTotal');       // blauer Griff = Ende Gesamt
+    const handleBoundary = document.getElementById('handleBoundary');
+    const handleTotal = document.getElementById('handleTotal');
 
     const centerLabel = document.getElementById('centerLabel');
     const centerMin = document.getElementById('centerMin');
@@ -288,7 +280,6 @@
 
     const MAX_TOTAL_MIN = 119;
 
-    // Persistenz
     let initialBreak = 10;
     let initialTotal = 45;
 
@@ -311,19 +302,15 @@
       }));
     }
 
-    // State
     const state = {
       totalSec: Math.min(MAX_TOTAL_MIN, Math.max(1, initialTotal)) * 60,
       breakSec: 0,
       workSec: 0,
-
       started:false,
       running:false,
-
       t0:0,
       pausedAcc:0,
       pauseStart:0,
-
       lastPhase:'work'
     };
 
@@ -332,7 +319,6 @@
 
     breakBig.textContent = Math.floor(state.breakSec / 60);
 
-    // Ticks zeichnen
     (function drawTicks(){
       const cx = 110;
       const cy = 110;
@@ -364,7 +350,6 @@
       }
     })();
 
-    // Helpers
     const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 
     function polar(cx, cy, r, deg){
@@ -381,8 +366,6 @@
         return '';
       }
 
-      // SVG zeichnet keinen echten 360°-Bogen mit identischem Start- und Endpunkt.
-      // Deshalb wird ein voller Kreis minimal reduziert.
       if(endDeg - startDeg >= 360){
         endDeg = startDeg + 359.999;
       }
@@ -466,7 +449,6 @@
       return 'done';
     }
 
-    // Sound beim Phasenwechsel
     let audioCtx = null;
 
     function getAudioCtx(){
@@ -544,26 +526,16 @@
       playChime(phase);
     }
 
-    // UI
     function updateDial(elapsed){
-      // Rest-Anteile:
-      // GRÜN = Auszeit im äußeren Ring
-      // ROT = Arbeitszeit, bei über 60 Minuten zusätzlich im inneren Ring
-
       const remRedSec = Math.max(0, state.workSec - elapsed);
       const remGreenSec = Math.max(0, state.totalSec - Math.max(elapsed, state.workSec));
 
       const degGreen = Math.min(360, (remGreenSec / 3600) * 360);
-
       const redDegTotal = (remRedSec / 3600) * 360;
 
-      // Im äußeren Ring ist nach dem grünen Bereich nur noch dieser Platz frei.
       const outerRedCapacity = Math.max(0, 360 - degGreen);
-
-      // Roter Anteil im äußeren Ring
       const degRedOuter = Math.min(redDegTotal, outerRedCapacity);
 
-      // Roter Anteil im zweiten inneren Ring, maximal 59 Minuten = 354°
       const degRedInner = Math.min(
         Math.max(0, redDegTotal - outerRedCapacity),
         354
@@ -572,11 +544,9 @@
       const cx = 110;
       const cy = 110;
 
-      // Äußerer Ring
       const rO = 98;
       const rI = 74;
 
-      // Zweiter innerer roter Ring
       const r2O = 70;
       const r2I = 62;
 
@@ -595,7 +565,6 @@
         degRedInner > 0 ? sectorPath(cx, cy, r2O, r2I, 0, degRedInner) : ''
       );
 
-      // Phase, Farben, Countdown
       if(remRedSec > 0){
         innerFill.setAttribute(
           'fill',
@@ -642,20 +611,15 @@
         centerColon.setAttribute('fill', 'var(--fg-soft)');
       }
 
-      // Griffe sichtbar, wenn nicht laufend
       const showHandles = !state.running;
 
       handleBoundary.style.display = showHandles ? 'block' : 'none';
       handleTotal.style.display = showHandles ? 'block' : 'none';
 
       if(showHandles){
-        // Schwarzer Griff: Ende GRÜN im äußeren Ring
         const boundaryDeg = Math.min(360, (state.breakSec / 3600) * 360);
-
         const totalMin = state.totalSec / 60;
 
-        // Blauer Griff:
-        // 1–60 Minuten außen, 61–119 Minuten innen
         const totalDeg = totalMin <= 60
           ? (totalMin / 60) * 360
           : ((totalMin - 60) / 60) * 360;
@@ -680,12 +644,9 @@
       updateDial(elapsed);
 
       startBtn.textContent = state.running ? 'Pause' : 'Start';
-
-      // Reset-Button nur zeigen, wenn nicht laufend
       resetBtn.style.display = state.running ? 'none' : 'inline-block';
     }
 
-    // Start/Pause/Timer
     let ticker = null;
 
     function start(){
@@ -694,7 +655,6 @@
         state.t0 = Date.now();
         state.pausedAcc = 0;
 
-        // Kein Sound bei Start, nur bei Wechsel
         state.lastPhase = state.workSec > 0
           ? 'work'
           : (state.totalSec > 0 ? 'break' : 'done');
@@ -759,7 +719,6 @@
       updateUI();
     }
 
-    // Reset auf 30 Minuten Gesamt, 7 Minuten Auszeit
     function hardResetTo30_7(){
       if(ticker){
         clearInterval(ticker);
@@ -784,9 +743,8 @@
       save();
     }
 
-    // Drag-Logik
     let dragging = false;
-    let dragMode = null; // 'boundary' | 'total'
+    let dragMode = null;
 
     function getHandlePositions(){
       const cx = 110;
@@ -796,7 +754,6 @@
       const gripRInner = 66;
 
       const boundaryDeg = Math.min(360, (state.breakSec / 3600) * 360);
-
       const totalMin = state.totalSec / 60;
 
       const totalDeg = totalMin <= 60
@@ -819,16 +776,12 @@
     }
 
     function totalMinFromPointer(info){
-      // Innenring: 61–119 Minuten
       if(info.radius < 74){
         return clamp(60 + Math.round(info.deg / 6), 61, MAX_TOTAL_MIN);
       }
 
-      // Außenring: 1–60 Minuten
       let m = Math.round(info.deg / 6);
 
-      // Oben am Kreis ist geometrisch 0°.
-      // Praktisch wird 60 Minuten in der Nähe von 360° erreicht.
       if(m === 0 && info.deg > 300){
         m = 60;
       }
@@ -915,7 +868,6 @@
       dragMode = null;
     });
 
-    // Auszeit ±
     function stepBreak(delta){
       const maxBreakMin = Math.min(60, Math.floor(state.totalSec / 60));
       const v = clamp(Math.floor(state.breakSec / 60) + delta, 0, maxBreakMin);
@@ -960,15 +912,14 @@
     addRepeater(breakPlus, () => stepBreak(+1));
     addRepeater(breakMinus, () => stepBreak(-1));
 
-    // Buttons
     startBtn.addEventListener('click', () => {
       state.running ? pause() : start();
     });
 
     resetBtn.addEventListener('click', hardResetTo30_7);
 
-    // Init
     updateUI();
   </script>
 </body>
 </html>
+```
