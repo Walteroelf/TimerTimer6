@@ -228,7 +228,6 @@
             00
           </text>
 
-          <!-- Neue Gesamtzeit-Anzeige: nur sichtbar, wenn der Timer nicht läuft -->
           <text id="centerTotalLabel" x="110" y="147" text-anchor="middle"
                 style="font: 800 9px/1 ui-sans-serif, system-ui, -apple-system, Segoe UI; letter-spacing:0.8px;">
             GESAMTZEIT
@@ -608,8 +607,9 @@
 
       centerTotalTime.textContent = `${mm}:${ss}`;
 
-      centerTotalLabel.setAttribute('fill', fillColor);
-      centerTotalTime.setAttribute('fill', fillColor);
+      // Gesamtzeit-Anzeige immer schwarz
+      centerTotalLabel.setAttribute('fill', '#000');
+      centerTotalTime.setAttribute('fill', '#000');
     }
 
     function updateDial(elapsed){
@@ -880,12 +880,6 @@
         state.workSec = state.totalSec - state.breakSec;
 
       }else{
-        /*
-          Blauer Griff:
-          Er steht am aktuellen Ende des roten Restbereichs.
-          Beim Verschieben wird die verbleibende Zeit auf volle Minuten gesetzt.
-        */
-
         const desiredRemainingMin = totalMinFromPointer(info);
 
         const maxRemainingWholeMin = Math.max(
