@@ -116,7 +116,7 @@
       margin-left:5px;
     }
 
-    /* Pause-Zustand */
+    /* Pause-Symbol */
     .controlBtn.pauseState::before,
     .controlBtn.pauseState::after{
       content:"";
@@ -544,6 +544,50 @@
       playChime(phase);
     }
 
+    function getBlueHandlePosition(elapsed){
+      const remRedSec = Math.max(0, state.workSec - elapsed);
+      const remGreenSec = Math.max(0, state.totalSec - Math.max(elapsed, state.workSec));
+
+      const degGreen = Math.min(360, (remGreenSec / 3600) * 360);
+      const redDegTotal = (remRedSec / 3600) * 360;
+
+      const outerRedCapacity = Math.max(0, 360 - degGreen);
+      const degRedOuter = Math.min(redDegTotal, outerRedCapacity);
+
+      const degRedInner = Math.min(
+        Math.max(0, redDegTotal - outerRedCapacity),
+        354
+      );
+
+      const cx = 110;
+      const cy = 110;
+
+      const rO = 98;
+      const rI = 74;
+
+      const r2O = 70;
+      const r2I = 62;
+
+      const gripROuter = (rO + rI) / 2;
+      const gripRInner = (r2O + r2I) / 2;
+
+      // Wenn der zweite rote Innenring sichtbar ist,
+      // sitzt der blaue Griff am Ende dieses inneren roten Rings.
+      if(degRedInner > 0){
+        return polar(cx, cy, gripRInner, degRedInner);
+      }
+
+      // Wenn nur der äußere rote Bereich sichtbar ist,
+      // sitzt der blaue Griff am Ende dieses äußeren roten Bereichs.
+      if(degRedOuter > 0){
+        return polar(cx, cy, gripROuter, degGreen + degRedOuter);
+      }
+
+      // Wenn kein roter Bereich mehr vorhanden ist,
+      // sitzt der blaue Griff am Ende des grünen Restbereichs.
+      return polar(cx, cy, gripROuter, degGreen);
+    }
+
     function updateDial(elapsed){
       const remRedSec = Math.max(0, state.workSec - elapsed);
       const remGreenSec = Math.max(0, state.totalSec - Math.max(elapsed, state.workSec));
@@ -631,29 +675,24 @@
 
       const showHandles = !state.running;
 
+      const boundaryDeg = Math.min(360, (state.breakSec / 3600) * 360);
+      const gripROuter = (rO + rI) / 2;
+
+      const pB = polar(cx, cy, gripROuter, boundaryDeg);
+
+      // Wichtig:
+      // Der blaue Griff sitzt immer am aktuellen Ende des roten Bereichs.
+      // Die Position wird auch dann aktualisiert, wenn der Griff unsichtbar ist.
+      const pT = getBlueHandlePosition(elapsed);
+
+      handleBoundary.setAttribute('cx', pB.x.toFixed(2));
+      handleBoundary.setAttribute('cy', pB.y.toFixed(2));
+
+      handleTotal.setAttribute('cx', pT.x.toFixed(2));
+      handleTotal.setAttribute('cy', pT.y.toFixed(2));
+
       handleBoundary.style.display = showHandles ? 'block' : 'none';
       handleTotal.style.display = showHandles ? 'block' : 'none';
-
-      if(showHandles){
-        const boundaryDeg = Math.min(360, (state.breakSec / 3600) * 360);
-        const totalMin = state.totalSec / 60;
-
-        const totalDeg = totalMin <= 60
-          ? (totalMin / 60) * 360
-          : ((totalMin - 60) / 60) * 360;
-
-        const gripROuter = (rO + rI) / 2;
-        const gripRInner = (r2O + r2I) / 2;
-
-        const pB = polar(cx, cy, gripROuter, boundaryDeg);
-        const pT = polar(cx, cy, totalMin <= 60 ? gripROuter : gripRInner, totalDeg);
-
-        handleBoundary.setAttribute('cx', pB.x.toFixed(2));
-        handleBoundary.setAttribute('cy', pB.y.toFixed(2));
-
-        handleTotal.setAttribute('cx', pT.x.toFixed(2));
-        handleTotal.setAttribute('cy', pT.y.toFixed(2));
-      }
     }
 
     function updateUI(){
@@ -696,7 +735,7 @@
           : (state.totalSec > 0 ? 'break' : 'done');
 
       }else{
-        // Exakt an der pausierten Stelle fortsetzen
+        // Exakt an der pausierten Stelle fortsetzen.
         if(state.pauseStart){
           state.pausedAcc += Date.now() - state.pauseStart;
           state.pauseStart = 0;
@@ -769,20 +808,13 @@
     function getHandlePositions(){
       const cx = 110;
       const cy = 110;
-
       const gripROuter = 86;
-      const gripRInner = 66;
 
       const boundaryDeg = Math.min(360, (state.breakSec / 3600) * 360);
-      const totalMin = state.totalSec / 60;
-
-      const totalDeg = totalMin <= 60
-        ? (totalMin / 60) * 360
-        : ((totalMin - 60) / 60) * 360;
 
       return {
         boundary: polar(cx, cy, gripROuter, boundaryDeg),
-        total: polar(cx, cy, totalMin <= 60 ? gripROuter : gripRInner, totalDeg)
+        total: getBlueHandlePosition(currentElapsed())
       };
     }
 
