@@ -30,9 +30,13 @@
       }
     }
 
-    *{ box-sizing:border-box; }
+    *{
+      box-sizing:border-box;
+    }
 
-    html,body{ height:100%; }
+    html,body{
+      height:100%;
+    }
 
     body{
       margin:0;
@@ -77,35 +81,61 @@
       color:var(--fg);
     }
 
-    .startBtn{
-      justify-self:center;
-      padding:12px 20px;
-      border:none;
-      border-radius:12px;
-      font-weight:800;
-      font-size:1.1rem;
-      background:#2563eb;
-      color:#fff;
-      cursor:pointer;
-    }
-
     .btnRow{
       display:flex;
-      gap:8px;
+      gap:12px;
       justify-content:center;
+      align-items:center;
       flex-wrap:wrap;
     }
 
-    .startBtn.ghost{
-      background:#eef2ff;
-      color:#111;
+    .controlBtn{
+      width:64px;
+      height:56px;
+      border:none;
+      border-radius:14px;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow:0 4px 12px rgba(0,0,0,.12);
+      touch-action:manipulation;
+      user-select:none;
+      position:relative;
     }
 
-    @media (prefers-color-scheme: dark){
-      .startBtn.ghost{
-        background:#1f2937;
-        color:#e5e7eb;
-      }
+    .controlBtn:disabled{
+      opacity:.45;
+      cursor:default;
+      box-shadow:none;
+    }
+
+    .playBtn{
+      background:var(--blue);
+    }
+
+    .stopBtn{
+      background:var(--red);
+    }
+
+    /* Play-Symbol ohne Text */
+    .playBtn::before{
+      content:"";
+      width:0;
+      height:0;
+      border-top:13px solid transparent;
+      border-bottom:13px solid transparent;
+      border-left:22px solid #fff;
+      margin-left:5px;
+    }
+
+    /* Stopp-Symbol ohne Text */
+    .stopBtn::before{
+      content:"";
+      width:24px;
+      height:24px;
+      background:#fff;
+      border-radius:3px;
     }
 
     /* Rechte Seite: Auszeit-Karte */
@@ -216,8 +246,8 @@
       </div>
 
       <div class="btnRow">
-        <button id="startBtn" class="startBtn" aria-label="Start/Pause">Start</button>
-        <button id="resetBtn" class="startBtn ghost" aria-label="Zurücksetzen auf 30/7">Reset</button>
+        <button id="playBtn" class="controlBtn playBtn" aria-label="Timer starten"></button>
+        <button id="stopBtn" class="controlBtn stopBtn" aria-label="Timer stoppen"></button>
       </div>
     </div>
 
@@ -268,8 +298,8 @@
     const centerColon = document.getElementById('centerColon');
     const centerSec = document.getElementById('centerSec');
 
-    const startBtn = document.getElementById('startBtn');
-    const resetBtn = document.getElementById('resetBtn');
+    const playBtn = document.getElementById('playBtn');
+    const stopBtn = document.getElementById('stopBtn');
 
     const breakPlus = document.getElementById('breakPlus');
     const breakMinus = document.getElementById('breakMinus');
@@ -640,57 +670,63 @@
 
       updateDial(elapsed);
 
-      startBtn.textContent = state.running ? 'Pause' : 'Start';
-      resetBtn.style.display = state.running ? 'none' : 'inline-block';
+      playBtn.disabled = state.running;
     }
 
     let ticker = null;
 
     function start(){
+      if(state.running){
+        return;
+      }
+
+      if(state.started && currentElapsed() >= state.totalSec){
+        state.started = false;
+        state.t0 = 0;
+        state.pausedAcc = 0;
+        state.pauseStart = 0;
+      }
+
       if(!state.started){
         state.started = true;
         state.t0 = Date.now();
         state.pausedAcc = 0;
+        state.pauseStart = 0;
 
         state.lastPhase = state.workSec > 0
           ? 'work'
           : (state.totalSec > 0 ? 'break' : 'done');
-
-      }else if(!state.running){
-        if(state.pauseStart){
-          state.pausedAcc += Date.now() - state.pauseStart;
-          state.pauseStart = 0;
-        }
       }
 
-      if(!state.running){
-        state.running = true;
-
-        if(ticker){
-          clearInterval(ticker);
-        }
-
-        ticker = setInterval(tick, 200);
-      }
-
-      updateUI();
-    }
-
-    function pause(){
-      if(!state.running){
-        return;
-      }
-
-      state.running = false;
-      state.pauseStart = Date.now();
+      state.running = true;
 
       if(ticker){
         clearInterval(ticker);
       }
 
-      ticker = null;
+      ticker = setInterval(tick, 200);
 
       updateUI();
+    }
+
+    function stop(){
+      if(ticker){
+        clearInterval(ticker);
+        ticker = null;
+      }
+
+      state.started = false;
+      state.running = false;
+      state.t0 = 0;
+      state.pausedAcc = 0;
+      state.pauseStart = 0;
+
+      state.lastPhase = state.workSec > 0
+        ? 'work'
+        : (state.totalSec > 0 ? 'break' : 'done');
+
+      updateUI();
+      save();
     }
 
     function tick(){
@@ -710,34 +746,12 @@
 
         state.running = false;
 
+        updateUI();
+
         return;
       }
 
       updateUI();
-    }
-
-    function hardResetTo30_7(){
-      if(ticker){
-        clearInterval(ticker);
-        ticker = null;
-      }
-
-      state.started = false;
-      state.running = false;
-      state.t0 = 0;
-      state.pausedAcc = 0;
-      state.pauseStart = 0;
-
-      state.totalSec = 30 * 60;
-      state.breakSec = 7 * 60;
-      state.workSec = state.totalSec - state.breakSec;
-
-      state.lastPhase = 'work';
-
-      breakBig.textContent = Math.floor(state.breakSec / 60);
-
-      updateUI();
-      save();
     }
 
     let dragging = false;
@@ -909,14 +923,10 @@
     addRepeater(breakPlus, () => stepBreak(+1));
     addRepeater(breakMinus, () => stepBreak(-1));
 
-    startBtn.addEventListener('click', () => {
-      state.running ? pause() : start();
-    });
-
-    resetBtn.addEventListener('click', hardResetTo30_7);
+    playBtn.addEventListener('click', start);
+    stopBtn.addEventListener('click', stop);
 
     updateUI();
   </script>
 </body>
 </html>
-```
