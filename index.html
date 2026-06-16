@@ -208,24 +208,35 @@
 
           <path id="arcRed2" fill="var(--red2)" opacity="0.95"/>
 
-          <text id="centerLabel" x="110" y="98" text-anchor="middle"
-                style="font: 800 18px/1.1 ui-sans-serif, system-ui, -apple-system, Segoe UI; fill: #fff;">
+          <text id="centerLabel" x="110" y="95" text-anchor="middle"
+                style="font: 800 17px/1.1 ui-sans-serif, system-ui, -apple-system, Segoe UI; fill: #fff;">
             ARBEITSZEIT
           </text>
 
-          <text id="centerMin" x="100" y="126" text-anchor="end"
+          <text id="centerMin" x="100" y="123" text-anchor="end"
                 style="font: 800 30px/1 ui-monospace, SFMono-Regular, Menlo, monospace; fill: #fff; letter-spacing:0.5px;">
             00
           </text>
 
-          <text id="centerColon" x="110" y="126" text-anchor="middle"
+          <text id="centerColon" x="110" y="123" text-anchor="middle"
                 style="font: 800 30px/1 ui-monospace, SFMono-Regular, Menlo, monospace; fill: #fff;">
             :
           </text>
 
-          <text id="centerSec" x="120" y="126" text-anchor="start"
+          <text id="centerSec" x="120" y="123" text-anchor="start"
                 style="font: 800 30px/1 ui-monospace, SFMono-Regular, Menlo, monospace; fill: #fff; letter-spacing:0.5px;">
             00
+          </text>
+
+          <!-- Neue Gesamtzeit-Anzeige: nur sichtbar, wenn der Timer nicht läuft -->
+          <text id="centerTotalLabel" x="110" y="147" text-anchor="middle"
+                style="font: 800 9px/1 ui-sans-serif, system-ui, -apple-system, Segoe UI; letter-spacing:0.8px;">
+            GESAMTZEIT
+          </text>
+
+          <text id="centerTotalTime" x="110" y="164" text-anchor="middle"
+                style="font: 800 15px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing:0.5px;">
+            00:00
           </text>
 
           <circle id="handleBoundary" r="10" fill="var(--black)" stroke="#fff" stroke-width="3" style="display:none" />
@@ -286,6 +297,9 @@
     const centerMin = document.getElementById('centerMin');
     const centerColon = document.getElementById('centerColon');
     const centerSec = document.getElementById('centerSec');
+
+    const centerTotalLabel = document.getElementById('centerTotalLabel');
+    const centerTotalTime = document.getElementById('centerTotalTime');
 
     const mainBtn = document.getElementById('mainBtn');
 
@@ -579,6 +593,25 @@
       return polar(cx, cy, gripROuter, degGreen);
     }
 
+    function updateTotalDisplay(elapsed, fillColor){
+      const showTotal = !state.running;
+
+      centerTotalLabel.style.display = showTotal ? 'block' : 'none';
+      centerTotalTime.style.display = showTotal ? 'block' : 'none';
+
+      if(!showTotal){
+        return;
+      }
+
+      const remainingTotalSec = Math.max(0, state.totalSec - elapsed);
+      const [mm, ss] = fmtMMSS(remainingTotalSec);
+
+      centerTotalTime.textContent = `${mm}:${ss}`;
+
+      centerTotalLabel.setAttribute('fill', fillColor);
+      centerTotalTime.setAttribute('fill', fillColor);
+    }
+
     function updateDial(elapsed){
       const remRedSec = Math.max(0, state.workSec - elapsed);
       const remGreenSec = Math.max(0, state.totalSec - Math.max(elapsed, state.workSec));
@@ -618,6 +651,8 @@
         degRedInner > 0 ? sectorPath(cx, cy, r2O, r2I, 0, degRedInner) : ''
       );
 
+      let centerFill = '#fff';
+
       if(remRedSec > 0){
         innerFill.setAttribute(
           'fill',
@@ -631,9 +666,7 @@
         centerMin.textContent = mm;
         centerSec.textContent = ss;
 
-        centerMin.setAttribute('fill', '#fff');
-        centerSec.setAttribute('fill', '#fff');
-        centerColon.setAttribute('fill', '#fff');
+        centerFill = '#fff';
 
       }else if(remGreenSec > 0){
         innerFill.setAttribute(
@@ -648,9 +681,7 @@
         centerMin.textContent = mm;
         centerSec.textContent = ss;
 
-        centerMin.setAttribute('fill', '#fff');
-        centerSec.setAttribute('fill', '#fff');
-        centerColon.setAttribute('fill', '#fff');
+        centerFill = '#fff';
 
       }else{
         innerFill.setAttribute('fill', 'transparent');
@@ -659,10 +690,15 @@
         centerMin.textContent = '00';
         centerSec.textContent = '00';
 
-        centerMin.setAttribute('fill', 'var(--fg-soft)');
-        centerSec.setAttribute('fill', 'var(--fg-soft)');
-        centerColon.setAttribute('fill', 'var(--fg-soft)');
+        centerFill = 'var(--fg-soft)';
       }
+
+      centerLabel.setAttribute('fill', centerFill);
+      centerMin.setAttribute('fill', centerFill);
+      centerSec.setAttribute('fill', centerFill);
+      centerColon.setAttribute('fill', centerFill);
+
+      updateTotalDisplay(elapsed, centerFill);
 
       const showHandles = !state.running;
 
@@ -848,7 +884,6 @@
           Blauer Griff:
           Er steht am aktuellen Ende des roten Restbereichs.
           Beim Verschieben wird die verbleibende Zeit auf volle Minuten gesetzt.
-          Dadurch entstehen keine krummen Sekunden bei der Arbeitszeit.
         */
 
         const desiredRemainingMin = totalMinFromPointer(info);
@@ -868,10 +903,6 @@
 
         const keepGreen = state.breakSec;
 
-        /*
-          totalSec darf hier elapsed + volle Minuten sein.
-          So bleibt die verbleibende Anzeige sauber minutengenau.
-        */
         state.totalSec = elapsed + desiredRemainingSec;
 
         state.breakSec = Math.min(
@@ -882,10 +913,6 @@
 
         state.workSec = state.totalSec - state.breakSec;
 
-        /*
-          Sicherheit:
-          Die verbleibende Arbeitszeit wird auf volle Minuten gerundet.
-        */
         const remWorkSec = Math.max(0, state.workSec - elapsed);
         const roundedRemWorkSec = Math.round(remWorkSec / 60) * 60;
 
