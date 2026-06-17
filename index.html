@@ -4,7 +4,6 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
   <title>Eieruhr – Arbeitszeit & Auszeit</title>
-
   <style>
     :root{
       color-scheme: light dark;
@@ -13,13 +12,11 @@
       --fg-soft:#334155;
       --card:#fff;
       --shadow:0 6px 18px rgba(0,0,0,.06);
-      --red:#ef4444;
-      --red2:#b91c1c;
-      --green:#16a34a;
+      --red:#ef4444;   /* ROT = Arbeitszeit (hintere Segmente) */
+      --green:#16a34a; /* GRÜN = Auszeit (vordere Segmente) */
       --black:#111;
       --blue:#2563eb;
     }
-
     @media (prefers-color-scheme: dark){
       :root{
         --bg:#0b1221;
@@ -29,15 +26,8 @@
         --shadow:none;
       }
     }
-
-    *{
-      box-sizing:border-box;
-    }
-
-    html,body{
-      height:100%;
-    }
-
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
     body{
       margin:0;
       padding: env(safe-area-inset-top) 6px env(safe-area-inset-bottom);
@@ -49,7 +39,6 @@
       justify-content:center;
       -webkit-tap-highlight-color: transparent;
     }
-
     .layout{
       width:100%;
       max-width:1100px;
@@ -57,7 +46,7 @@
       grid-template-columns: 2fr 1fr;
       gap:10px;
     }
-
+    /* Linke Seite: Uhr */
     .dialCard{
       background:var(--card);
       border-radius:14px;
@@ -66,87 +55,70 @@
       display:grid;
       gap:8px;
     }
-
     .dialWrap{
       display:flex;
       align-items:center;
       justify-content:center;
       width:100%;
     }
-
     .dial{
       width:min(84vw, 620px);
       height:min(84vw, 620px);
       touch-action:none;
       color:var(--fg);
     }
-
+    .startBtn{
+      justify-self:center;
+      padding:12px 20px;
+      border:none;
+      border-radius:12px;
+      font-weight:800;
+      font-size:1.1rem;
+      background:#2563eb;
+      color:#fff;
+      cursor:pointer;
+    }
     .btnRow{
       display:flex;
-      gap:12px;
+      gap:8px;
       justify-content:center;
-      align-items:center;
       flex-wrap:wrap;
     }
-
-    .controlBtn{
-      width:72px;
-      height:58px;
+    .startBtn.ghost{
+      background:#eef2ff;
+      color:#111;
+    }
+    .tinyBtn{
+      padding:8px 12px;
       border:none;
-      border-radius:14px;
+      border-radius:10px;
+      font-weight:800;
+      background:#eef2ff;
+      color:#111;
       cursor:pointer;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      box-shadow:0 4px 12px rgba(0,0,0,.12);
-      touch-action:manipulation;
-      user-select:none;
-      position:relative;
-      background:var(--blue);
     }
-
-    .controlBtn::before{
-      content:"";
-      width:0;
-      height:0;
-      border-top:14px solid transparent;
-      border-bottom:14px solid transparent;
-      border-left:23px solid #fff;
-      margin-left:5px;
-    }
-
-    .controlBtn.pauseState::before,
-    .controlBtn.pauseState::after{
-      content:"";
-      width:9px;
-      height:28px;
-      background:#fff;
-      border-radius:3px;
-      border:none;
+    .hint{
+      font-weight:700;
+      opacity:0.75;
       margin:0 4px;
+      align-self:center;
     }
-
-    .controlBtn.pauseState::before{
-      margin-left:0;
+    @media (prefers-color-scheme: dark){
+      .startBtn.ghost{ background:#1f2937; color:#e5e7eb; }
+      .tinyBtn{ background:#1f2937; color:#e5e7eb; }
     }
-
-    .controlBtn.pauseState::after{
-      display:block;
-    }
-
+    /* Rechte Seite: Auszeit-Karte (grün) */
     .sideCard{
       background:var(--card);
       border-radius:14px;
       padding:10px;
       box-shadow:var(--shadow);
       display:grid;
-      grid-template-rows:auto auto auto;
-      align-content:center;
-      gap:4px;
+      grid-template-rows:auto 1fr auto;
+      gap:6px; /* +/− dichter am Feld */
       align-items:center;
       justify-items:center;
     }
-
     .bigStep{
       width:92px;
       height:92px;
@@ -160,24 +132,21 @@
       touch-action:manipulation;
       user-select:none;
     }
-
     .clockCard{
       width:180px;
       height:230px;
       border:2px solid #000;
       border-radius:12px;
-      background:var(--green);
+      background:var(--green); /* gleiches Grün wie Auszeit-Balken */
       display:grid;
       align-items:center;
       justify-items:center;
       position:relative;
     }
-
     .clockFace{
       width:150px;
       height:150px;
     }
-
     .clockNum{
       position:absolute;
       top:50%;
@@ -185,85 +154,73 @@
       transform:translate(-50%,-50%);
       font-size:3.6rem;
       font-weight:800;
-      color:#fff;
+      color:#fff; /* auf grün gut lesbar */
     }
   </style>
 </head>
-
 <body>
   <div class="layout" aria-label="Timer Oberfläche">
-
+    <!-- Linke Hälfte: 60‑Min‑Uhr -->
     <div class="dialCard">
       <div class="dialWrap">
-        <svg id="dial" class="dial" viewBox="0 0 220 220" role="img" aria-label="Eieruhr mit 119-Minuten-Skala">
-
+        <svg id="dial" class="dial" viewBox="0 0 220 220" role="img" aria-label="Eieruhr mit 60‑Minuten‑Skala">
+          <!-- Hintergrund -->
           <circle cx="110" cy="110" r="104" fill="currentColor" opacity="0.06"/>
           <circle cx="110" cy="110" r="100" fill="#fff" stroke="currentColor" stroke-width="3"/>
+
+          <!-- Segmente: dynamisch in mehreren Bändern (HINTER der Skala) -->
+          <g id="arcsLayer"></g>
+
+          <!-- Skala: IMMER VORN -->
           <g id="ticks"></g>
 
-          <path id="arcGreen" fill="var(--green)" opacity="0.92"/>
-          <path id="arcRed" fill="var(--red)" opacity="0.92"/>
-
+          <!-- Innerer Kreis (Farbe = aktuelle Phase) -->
           <circle id="innerFill" cx="110" cy="110" r="72" fill="transparent" opacity="0.92"/>
 
-          <path id="arcRed2" fill="var(--red2)" opacity="0.95"/>
-
-          <text id="centerLabel" x="110" y="95" text-anchor="middle"
-                style="font: 800 17px/1.1 ui-sans-serif, system-ui, -apple-system, Segoe UI; fill: #fff;">
+          <!-- Label + Countdown MM:SS -->
+          <text id="centerLabel" x="110" y="98" text-anchor="middle" style="font: 800 18px/1.1 ui-sans-serif, system-ui, -apple-system, Segoe UI; fill: #fff;">
             ARBEITSZEIT
           </text>
+          <text id="centerMin" x="100" y="126" text-anchor="end" style="font: 800 30px/1 ui-monospace, SFMono-Regular, Menlo, monospace; fill: #fff; letter-spacing:0.5px;">00</text>
+          <text id="centerColon" x="110" y="126" text-anchor="middle" style="font: 800 30px/1 ui-monospace, SFMono-Regular, Menlo, monospace; fill: #fff;">:</text>
+          <text id="centerSec" x="120" y="126" text-anchor="start" style="font: 800 30px/1 ui-monospace, SFMono-Regular, Menlo, monospace; fill: #fff; letter-spacing:0.5px;">00</text>
 
-          <text id="centerMin" x="100" y="123" text-anchor="end"
-                style="font: 800 30px/1 ui-monospace, SFMono-Regular, Menlo, monospace; fill: #fff; letter-spacing:0.5px;">
-            00
-          </text>
-
-          <text id="centerColon" x="110" y="123" text-anchor="middle"
-                style="font: 800 30px/1 ui-monospace, SFMono-Regular, Menlo, monospace; fill: #fff;">
-            :
-          </text>
-
-          <text id="centerSec" x="120" y="123" text-anchor="start"
-                style="font: 800 30px/1 ui-monospace, SFMono-Regular, Menlo, monospace; fill: #fff; letter-spacing:0.5px;">
-            00
-          </text>
-
-          <text id="centerTotalLabel" x="110" y="147" text-anchor="middle"
-                style="font: 800 9px/1 ui-sans-serif, system-ui, -apple-system, Segoe UI; letter-spacing:0.8px;">
-            GESAMTZEIT
-          </text>
-
-          <text id="centerTotalTime" x="110" y="164" text-anchor="middle"
-                style="font: 800 15px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing:0.5px;">
-            00:00
-          </text>
-
+          <!-- Griffe -->
           <circle id="handleBoundary" r="10" fill="var(--black)" stroke="#fff" stroke-width="3" style="display:none" />
           <circle id="handleTotal" r="10" fill="var(--blue)" stroke="#fff" stroke-width="3" style="display:none" />
 
-          <circle cx="110" cy="110" r="72" fill="transparent" stroke="currentColor" stroke-width="2"/>
+          <!-- Innenkreis-Ring -->
+          <circle id="innerRing" cx="110" cy="110" r="72" fill="transparent" stroke="currentColor" stroke-width="2"/>
+          <!-- Mittelpunkt-Punkt entfernt -->
         </svg>
       </div>
 
+      <!-- Start + Reset -->
       <div class="btnRow">
-        <button id="mainBtn" class="controlBtn" aria-label="Timer starten"></button>
+        <button id="startBtn" class="startBtn" aria-label="Start/Pause">Start</button>
+        <button id="resetBtn" class="startBtn ghost" aria-label="Zurücksetzen auf 30/7">Reset</button>
+      </div>
+
+      <!-- ±60 Minuten Gesamtzeit -->
+      <div class="btnRow" style="margin-top:-4px">
+        <button id="totalMinus60" class="tinyBtn" aria-label="Gesamtzeit minus 60 Minuten">−60</button>
+        <span class="hint">Gesamt</span>
+        <button id="totalPlus60" class="tinyBtn" aria-label="Gesamtzeit plus 60 Minuten">+60</button>
       </div>
     </div>
 
+    <!-- Rechte Hälfte: Auszeit (grün) einstellen -->
     <div class="sideCard" aria-label="Auszeit einstellen">
       <button id="breakPlus" class="bigStep" aria-label="Auszeit plus 1 Minute">+</button>
-
-      <div class="clockCard" aria-live="polite" title="Auszeit grün">
+      <div class="clockCard" aria-live="polite" title="Auszeit (grün)">
         <svg class="clockFace" viewBox="0 0 100 100" aria-hidden="true">
           <circle cx="50" cy="50" r="45" stroke="#000" stroke-width="3" fill="none"/>
-
           <g stroke="#000" stroke-width="2.5" opacity="0.9">
             <line x1="50" y1="8" x2="50" y2="16"/>
             <line x1="50" y1="84" x2="50" y2="92"/>
             <line x1="8" y1="50" x2="16" y2="50"/>
             <line x1="84" y1="50" x2="92" y2="50"/>
           </g>
-
           <g stroke="#000" stroke-width="1.6" opacity="0.7">
             <line x1="23" y1="23" x2="28" y2="28"/>
             <line x1="72" y1="72" x2="77" y2="77"/>
@@ -271,67 +228,57 @@
             <line x1="72" y1="28" x2="77" y2="23"/>
           </g>
         </svg>
-
         <div id="breakBig" class="clockNum">10</div>
       </div>
-
       <button id="breakMinus" class="bigStep" aria-label="Auszeit minus 1 Minute">−</button>
     </div>
   </div>
 
   <script>
+    // DOM
     const dial = document.getElementById('dial');
     const ticksG = document.getElementById('ticks');
-
-    const arcGreen = document.getElementById('arcGreen');
-    const arcRed = document.getElementById('arcRed');
-    const arcRed2 = document.getElementById('arcRed2');
-
+    const arcsLayer = document.getElementById('arcsLayer');
     const innerFill = document.getElementById('innerFill');
-
+    const innerRing = document.getElementById('innerRing');
     const handleBoundary = document.getElementById('handleBoundary');
     const handleTotal = document.getElementById('handleTotal');
-
     const centerLabel = document.getElementById('centerLabel');
     const centerMin = document.getElementById('centerMin');
     const centerColon = document.getElementById('centerColon');
     const centerSec = document.getElementById('centerSec');
-
-    const centerTotalLabel = document.getElementById('centerTotalLabel');
-    const centerTotalTime = document.getElementById('centerTotalTime');
-
-    const mainBtn = document.getElementById('mainBtn');
-
+    const startBtn = document.getElementById('startBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const totalPlus60 = document.getElementById('totalPlus60');
+    const totalMinus60 = document.getElementById('totalMinus60');
     const breakPlus = document.getElementById('breakPlus');
     const breakMinus = document.getElementById('breakMinus');
     const breakBig = document.getElementById('breakBig');
 
-    const MAX_TOTAL_MIN = 119;
+    // Konfiguration Mehrstunden
+    const MAX_HOURS = 6;
+    const MIN_TOTAL_MIN = 1;
+    const MAX_TOTAL_MIN = MAX_HOURS * 60;
+    const clampTotalMin = (m)=> Math.min(MAX_TOTAL_MIN, Math.max(MIN_TOTAL_MIN, m));
 
-    let initialBreak = 10;
-    let initialTotal = 45;
-
+    // Persist
+    let initialBreak = 10, initialTotal = 45;
     try{
-      const saved = JSON.parse(localStorage.getItem('ttHandles') || '{}');
-
-      if(Number.isFinite(saved.breakMin)){
-        initialBreak = saved.breakMin;
-      }
-
-      if(Number.isFinite(saved.totalMin)){
-        initialTotal = Math.min(MAX_TOTAL_MIN, Math.max(1, saved.totalMin));
-      }
+      const saved = JSON.parse(localStorage.getItem('ttHandles')||'{}');
+      if(Number.isFinite(saved.breakMin)) initialBreak = saved.breakMin;
+      if(Number.isFinite(saved.totalMin)) initialTotal = clampTotalMin(saved.totalMin);
     }catch{}
 
     function save(){
       localStorage.setItem('ttHandles', JSON.stringify({
-        breakMin: Math.floor(state.breakSec / 60),
-        totalMin: Math.floor(state.totalSec / 60)
+        breakMin: Math.floor(state.breakSec/60),
+        totalMin: Math.floor(state.totalSec/60)
       }));
     }
 
+    // State
     const state = {
-      totalSec: Math.min(MAX_TOTAL_MIN, Math.max(1, initialTotal)) * 60,
+      totalSec: clampTotalMin(initialTotal)*60,
       breakSec: 0,
       workSec: 0,
       started:false,
@@ -341,680 +288,413 @@
       pauseStart:0,
       lastPhase:'work'
     };
-
-    state.breakSec = Math.min(initialBreak * 60, state.totalSec, 60 * 60);
+    state.breakSec = Math.min(initialBreak*60, state.totalSec);
     state.workSec = state.totalSec - state.breakSec;
+    breakBig.textContent = Math.floor(state.breakSec/60);
 
-    breakBig.textContent = Math.floor(state.breakSec / 60);
-
+    // Ticks (ruhig) – werden nach arcsLayer gezeichnet und liegen damit VORN
     (function drawTicks(){
-      const cx = 110;
-      const cy = 110;
-      const rOuter = 100;
-      const long = 12;
-      const short = 6;
-
-      for(let i = 0; i < 60; i++){
-        const angle = i * 6;
-        const rad = (angle - 90) * Math.PI / 180;
-        const len = (i % 5 === 0) ? long : short;
-
-        const x1 = cx + (rOuter - len) * Math.cos(rad);
-        const y1 = cy + (rOuter - len) * Math.sin(rad);
-        const x2 = cx + rOuter * Math.cos(rad);
-        const y2 = cy + rOuter * Math.sin(rad);
-
-        const line = document.createElementNS('http://www.w3.org/2000/svg','line');
-
-        line.setAttribute('x1', x1.toFixed(2));
-        line.setAttribute('y1', y1.toFixed(2));
-        line.setAttribute('x2', x2.toFixed(2));
-        line.setAttribute('y2', y2.toFixed(2));
-        line.setAttribute('stroke', 'currentColor');
-        line.setAttribute('stroke-width', i % 5 === 0 ? '2' : '1');
-        line.setAttribute('opacity', i % 5 === 0 ? '0.65' : '0.45');
-
+      const cx=110, cy=110, rOuter=100, long=12, short=6;
+      for(let i=0;i<60;i++){
+        const angle=i*6, rad=(angle-90)*Math.PI/180;
+        const len=(i%5===0)? long : short;
+        const x1=cx+(rOuter-len)*Math.cos(rad), y1=cy+(rOuter-len)*Math.sin(rad);
+        const x2=cx+rOuter*Math.cos(rad), y2=cy+rOuter*Math.sin(rad);
+        const line=document.createElementNS('http://www.w3.org/2000/svg','line');
+        line.setAttribute('x1',x1.toFixed(2));
+        line.setAttribute('y1',y1.toFixed(2));
+        line.setAttribute('x2',x2.toFixed(2));
+        line.setAttribute('y2',y2.toFixed(2));
+        line.setAttribute('stroke','currentColor');
+        line.setAttribute('stroke-width', i%5===0 ? '2':'1');
+        line.setAttribute('opacity', i%5===0 ? '0.65':'0.45');
         ticksG.appendChild(line);
       }
     })();
 
-    const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+    // Helpers
+    const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 
-    function polar(cx, cy, r, deg){
-      const a = (deg - 90) * Math.PI / 180;
-
-      return {
-        x: cx + r * Math.cos(a),
-        y: cy + r * Math.sin(a)
-      };
-    }
-
-    function sectorPath(cx, cy, rO, rI, startDeg, endDeg){
-      if(endDeg <= startDeg){
-        return '';
-      }
-
-      if(endDeg - startDeg >= 360){
-        endDeg = startDeg + 359.999;
-      }
-
-      const large = (endDeg - startDeg) > 180 ? 1 : 0;
-
-      const p1 = polar(cx, cy, rO, startDeg);
-      const p2 = polar(cx, cy, rO, endDeg);
-      const p3 = polar(cx, cy, rI, endDeg);
-      const p4 = polar(cx, cy, rI, startDeg);
-
-      return `M ${p1.x} ${p1.y}
-              A ${rO} ${rO} 0 ${large} 1 ${p2.x} ${p2.y}
-              L ${p3.x} ${p3.y}
-              A ${rI} ${rI} 0 ${large} 0 ${p4.x} ${p4.y}
-              Z`;
-    }
-
-    function pointerInfo(e){
+    function angleFromPointer(e){
       e.preventDefault();
+      const rect=dial.getBoundingClientRect();
+      const x=e.clientX - (rect.left + rect.width/2);
+      const y=e.clientY - (rect.top + rect.height/2);
+      let deg = (Math.atan2(y,x)*180/Math.PI)+90;
+      if(deg<0) deg+=360;
+      return deg; // 0° oben
+    }
 
-      const rect = dial.getBoundingClientRect();
-      const scale = 220 / rect.width;
+    function polar(cx,cy,r,deg){
+      const a=(deg-90)*Math.PI/180;
+      return {x:cx+r*Math.cos(a), y:cy+r*Math.sin(a)};
+    }
 
-      const x = (e.clientX - (rect.left + rect.width / 2)) * scale;
-      const y = (e.clientY - (rect.top + rect.height / 2)) * scale;
-
-      let deg = (Math.atan2(y, x) * 180 / Math.PI) + 90;
-
-      if(deg < 0){
-        deg += 360;
-      }
-
-      return {
-        deg,
-        radius: Math.hypot(x, y),
-        vx: 110 + x,
-        vy: 110 + y
-      };
+    function sectorPath(cx,cy,rO,rI,startDeg,endDeg){
+      if(endDeg<=startDeg) return '';
+      const large=(endDeg-startDeg)>180?1:0;
+      const p1=polar(cx,cy,rO,startDeg), p2=polar(cx,cy,rO,endDeg);
+      const p3=polar(cx,cy,rI,endDeg), p4=polar(cx,cy,rI,startDeg);
+      return `M ${p1.x} ${p1.y} A ${rO} ${rO} 0 ${large} 1 ${p2.x} ${p2.y} L ${p3.x} ${p3.y} A ${rI} ${rI} 0 ${large} 0 ${p4.x} ${p4.y} Z`;
     }
 
     function currentElapsed(){
-      if(!state.started){
-        return 0;
-      }
-
-      const now = Date.now();
-
-      const paused = state.running
-        ? state.pausedAcc
-        : state.pausedAcc + (state.pauseStart ? (now - state.pauseStart) : 0);
-
-      return clamp(
-        Math.floor((now - state.t0 - paused) / 1000),
-        0,
-        state.totalSec
-      );
+      if(!state.started) return 0;
+      const now=Date.now();
+      const paused = state.running ? state.pausedAcc : (state.pausedAcc + (state.pauseStart ? (now - state.pauseStart) : 0));
+      return clamp(Math.floor((now - state.t0 - paused)/1000), 0, state.totalSec);
     }
 
     function fmtMMSS(s){
-      s = Math.max(0, Math.floor(s));
-
-      const m = Math.floor(s / 60);
-      const sec = s % 60;
-
-      return [
-        String(m).padStart(2, '0'),
-        String(sec).padStart(2, '0')
-      ];
+      s=Math.max(0,Math.floor(s));
+      const m=Math.floor(s/60),sec=s%60;
+      return [String(m).padStart(2,'0'), String(sec).padStart(2,'0')];
     }
 
+    function minuteDegOf(sec){
+      const rem = sec % 3600;
+      return (rem===0 && sec>0) ? 360 : (rem/60)*6;
+    }
+
+    // Phase
     function getPhase(elapsed){
-      if(elapsed < state.workSec){
-        return 'work';
-      }
-
-      if(elapsed < state.totalSec){
-        return 'break';
-      }
-
+      if(elapsed < state.workSec) return 'work';
+      if(elapsed < state.totalSec) return 'break';
       return 'done';
     }
 
+    // Sound
     let audioCtx = null;
-
     function getAudioCtx(){
       const AC = window.AudioContext || window.webkitAudioContext;
-
-      if(!AC){
-        return null;
-      }
-
-      if(!audioCtx){
-        audioCtx = new AC();
-      }
-
-      if(audioCtx.state === 'suspended'){
-        audioCtx.resume();
-      }
-
+      if(!AC) return null;
+      if(!audioCtx) audioCtx = new AC();
+      if(audioCtx.state === 'suspended') audioCtx.resume();
       return audioCtx;
     }
-
     function playChime(phase){
       const ctx = getAudioCtx();
-
-      if(!ctx){
-        return;
-      }
-
+      if(!ctx) return;
       const t = ctx.currentTime;
-
-      const tone = (freq, start, dur = 0.2, type = 'sine', gain = 0.28) => {
+      const tone = (freq, start, dur=0.2, type='sine', gain=0.28)=>{
         const o = ctx.createOscillator();
         const g = ctx.createGain();
-
-        o.type = type;
-        o.frequency.setValueAtTime(freq, t + start);
-
+        o.type = type; o.frequency.setValueAtTime(freq, t+start);
         o.connect(g).connect(ctx.destination);
-
-        g.gain.setValueAtTime(0.0001, t + start);
-        g.gain.linearRampToValueAtTime(gain, t + start + 0.01);
-        g.gain.exponentialRampToValueAtTime(0.0001, t + start + dur);
-
-        o.start(t + start);
-        o.stop(t + start + dur + 0.03);
+        g.gain.setValueAtTime(0.0001, t+start);
+        g.gain.linearRampToValueAtTime(gain, t+start+0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, t+start+dur);
+        o.start(t+start); o.stop(t+start+dur+0.03);
       };
-
-      if(phase === 'break'){
+      if(phase==='break'){
         tone(660, 0, 0.18, 'sine', 0.26);
         tone(880, 0.12, 0.18, 'sine', 0.22);
-
-        if('vibrate' in navigator){
-          navigator.vibrate([120, 90, 120]);
-        }
-
-      }else if(phase === 'done'){
-        tone(740, 0, 0.18, 'triangle', 0.3);
+        if('vibrate' in navigator) navigator.vibrate([120,90,120]);
+      }else if(phase==='done'){
+        tone(740, 0,    0.18, 'triangle', 0.3);
         tone(740, 0.25, 0.18, 'triangle', 0.3);
-        tone(740, 0.5, 0.18, 'triangle', 0.3);
-
-        if('vibrate' in navigator){
-          navigator.vibrate([200, 100, 200, 100, 200]);
-        }
-
+        tone(740, 0.5,  0.18, 'triangle', 0.3);
+        if('vibrate' in navigator) navigator.vibrate([200,100,200,100,200]);
       }else{
-        tone(520, 0, 0.14, 'sine', 0.22);
+        tone(520, 0,    0.14, 'sine', 0.22);
         tone(440, 0.12, 0.16, 'sine', 0.20);
-
-        if('vibrate' in navigator){
-          navigator.vibrate(80);
-        }
+        if('vibrate' in navigator) navigator.vibrate(80);
       }
     }
+    function onPhaseChange(phase){ playChime(phase); }
 
-    function onPhaseChange(phase){
-      playChime(phase);
+    // Multi-Band Zeichnen
+    function clearNode(el){ while(el.firstChild) el.removeChild(el.firstChild); }
+    function secToDeg(sec){ return (sec/3600)*360; }
+    function addArcPath(g, color, rO, rI, startDeg, endDeg){
+      if(endDeg<=startDeg) return;
+      const d = sectorPath(110,110,rO,rI,startDeg,endDeg);
+      const p = document.createElementNS('http://www.w3.org/2000/svg','path');
+      p.setAttribute('d', d);
+      p.setAttribute('fill', color);
+      p.setAttribute('opacity','0.92');
+      g.appendChild(p);
     }
 
-    function getBlueHandlePosition(elapsed){
-      const remRedSec = Math.max(0, state.workSec - elapsed);
-      const remGreenSec = Math.max(0, state.totalSec - Math.max(elapsed, state.workSec));
-
-      const degGreen = Math.min(360, (remGreenSec / 3600) * 360);
-      const redDegTotal = (remRedSec / 3600) * 360;
-
-      const outerRedCapacity = Math.max(0, 360 - degGreen);
-      const degRedOuter = Math.min(redDegTotal, outerRedCapacity);
-
-      const degRedInner = Math.min(
-        Math.max(0, redDegTotal - outerRedCapacity),
-        354
-      );
-
-      const cx = 110;
-      const cy = 110;
-
-      const rO = 98;
-      const rI = 74;
-
-      const r2O = 70;
-      const r2I = 62;
-
-      const gripROuter = (rO + rI) / 2;
-      const gripRInner = (r2O + r2I) / 2;
-
-      if(degRedInner > 0){
-        return polar(cx, cy, gripRInner, degRedInner);
-      }
-
-      if(degRedOuter > 0){
-        return polar(cx, cy, gripROuter, degGreen + degRedOuter);
-      }
-
-      return polar(cx, cy, gripROuter, degGreen);
-    }
-
-    function updateTotalDisplay(elapsed, fillColor){
-      const showTotal = !state.running;
-
-      centerTotalLabel.style.display = showTotal ? 'block' : 'none';
-      centerTotalTime.style.display = showTotal ? 'block' : 'none';
-
-      if(!showTotal){
-        return;
-      }
-
-      const remainingTotalSec = Math.max(0, state.totalSec - elapsed);
-      const [mm, ss] = fmtMMSS(remainingTotalSec);
-
-      centerTotalTime.textContent = `${mm}:${ss}`;
-
-      // Gesamtzeit-Anzeige immer schwarz
-      centerTotalLabel.setAttribute('fill', '#000');
-      centerTotalTime.setAttribute('fill', '#000');
+    // Recalc + UI
+    function recalc(){
+      state.breakSec = clamp(state.breakSec, 0, state.totalSec);
+      state.workSec  = clamp(state.totalSec - state.breakSec, 0, state.totalSec);
+      breakBig.textContent = Math.floor(state.breakSec/60);
+      updateUI();
+      save();
     }
 
     function updateDial(elapsed){
+      // Rest-Anteile
       const remRedSec = Math.max(0, state.workSec - elapsed);
       const remGreenSec = Math.max(0, state.totalSec - Math.max(elapsed, state.workSec));
 
-      const degGreen = Math.min(360, (remGreenSec / 3600) * 360);
-      const redDegTotal = (remRedSec / 3600) * 360;
+      // Multi-Band
+      clearNode(arcsLayer);
+      const styles = getComputedStyle(document.documentElement);
+      const colGreen = styles.getPropertyValue('--green') || '#16a34a';
+      const colRed   = styles.getPropertyValue('--red')   || '#ef4444';
 
-      const outerRedCapacity = Math.max(0, 360 - degGreen);
-      const degRedOuter = Math.min(redDegTotal, outerRedCapacity);
+      const remTotal = remRedSec + remGreenSec;
+      const bandsNeeded = Math.max(1, Math.ceil(remTotal / 3600));
 
-      const degRedInner = Math.min(
-        Math.max(0, redDegTotal - outerRedCapacity),
-        354
-      );
+      const baseRO = 98;
+      const bandThickness = 10;
+      const bandSpacing = 2;
 
-      const cx = 110;
-      const cy = 110;
+      let gLeft = remGreenSec;
+      let rLeft = remRedSec;
 
-      const rO = 98;
-      const rI = 74;
+      for(let i=0; i<bandsNeeded; i++){
+        const rO = baseRO - i*(bandThickness+bandSpacing);
+        const rI = rO - bandThickness;
+        if(rI <= 12) break;
 
-      const r2O = 70;
-      const r2I = 62;
+        const gThis = Math.min(gLeft, 3600);
+        const rThis = Math.min(rLeft, 3600 - gThis);
 
-      arcGreen.setAttribute(
-        'd',
-        degGreen > 0 ? sectorPath(cx, cy, rO, rI, 0, degGreen) : ''
-      );
+        const gDeg = secToDeg(gThis);
+        const rDeg = secToDeg(rThis);
 
-      arcRed.setAttribute(
-        'd',
-        degRedOuter > 0 ? sectorPath(cx, cy, rO, rI, degGreen, degGreen + degRedOuter) : ''
-      );
+        // Reihenfolge: GRÜN (vorn), dann ROT
+        if(gDeg > 0) addArcPath(arcsLayer, colGreen, rO, rI, 0, gDeg);
+        if(rDeg > 0) addArcPath(arcsLayer, colRed,   rO, rI, gDeg, gDeg + rDeg);
 
-      arcRed2.setAttribute(
-        'd',
-        degRedInner > 0 ? sectorPath(cx, cy, r2O, r2I, 0, degRedInner) : ''
-      );
-
-      let centerFill = '#fff';
-
-      if(remRedSec > 0){
-        innerFill.setAttribute(
-          'fill',
-          getComputedStyle(document.documentElement).getPropertyValue('--red') || '#ef4444'
-        );
-
-        centerLabel.textContent = 'ARBEITSZEIT';
-
-        const [mm, ss] = fmtMMSS(remRedSec);
-
-        centerMin.textContent = mm;
-        centerSec.textContent = ss;
-
-        centerFill = '#fff';
-
-      }else if(remGreenSec > 0){
-        innerFill.setAttribute(
-          'fill',
-          getComputedStyle(document.documentElement).getPropertyValue('--green') || '#16a34a'
-        );
-
-        centerLabel.textContent = 'AUSZEIT';
-
-        const [mm, ss] = fmtMMSS(remGreenSec);
-
-        centerMin.textContent = mm;
-        centerSec.textContent = ss;
-
-        centerFill = '#fff';
-
-      }else{
-        innerFill.setAttribute('fill', 'transparent');
-
-        centerLabel.textContent = 'FERTIG';
-        centerMin.textContent = '00';
-        centerSec.textContent = '00';
-
-        centerFill = 'var(--fg-soft)';
+        gLeft -= gThis;
+        rLeft -= rThis;
       }
 
-      centerLabel.setAttribute('fill', centerFill);
-      centerMin.setAttribute('fill', centerFill);
-      centerSec.setAttribute('fill', centerFill);
-      centerColon.setAttribute('fill', centerFill);
+      // Label/Farbe/Countdown
+      if (remRedSec > 0) {
+        innerFill.setAttribute('fill', colRed);
+        centerLabel.textContent = 'ARBEITSZEIT';
+        const [mm,ss] = fmtMMSS(remRedSec);
+        centerMin.textContent = mm; centerSec.textContent = ss;
+        centerMin.setAttribute('fill', '#fff'); centerSec.setAttribute('fill', '#fff'); centerColon.setAttribute('fill', '#fff');
+      } else if (remGreenSec > 0) {
+        innerFill.setAttribute('fill', colGreen);
+        centerLabel.textContent = 'AUSZEIT';
+        const [mm,ss] = fmtMMSS(remGreenSec);
+        centerMin.textContent = mm; centerSec.textContent = ss;
+        centerMin.setAttribute('fill', '#fff'); centerSec.setAttribute('fill', '#fff'); centerColon.setAttribute('fill', '#fff');
+      } else {
+        innerFill.setAttribute('fill', 'transparent');
+        centerLabel.textContent = 'FERTIG';
+        centerMin.textContent = '00'; centerSec.textContent = '00';
+        centerMin.setAttribute('fill', 'var(--fg-soft)'); centerSec.setAttribute('fill', 'var(--fg-soft)'); centerColon.setAttribute('fill', 'var(--fg-soft)');
+      }
 
-      updateTotalDisplay(elapsed, centerFill);
+      // Innenkreis-Radius passend zu Bändern
+      const deepestIndex = Math.max(0, bandsNeeded-1);
+      const deepest_rO = baseRO - deepestIndex*(bandThickness+bandSpacing);
+      const deepest_rI = deepest_rO - bandThickness;
+      const innerR = Math.max(24, deepest_rI - 4);
+      innerFill.setAttribute('r', innerR);
+      innerRing.setAttribute('r', innerR);
 
+      // Griffe nur im Leerlauf / Pause
       const showHandles = !state.running;
-
-      const boundaryDeg = Math.min(360, (state.breakSec / 3600) * 360);
-      const gripROuter = (rO + rI) / 2;
-
-      const pB = polar(cx, cy, gripROuter, boundaryDeg);
-      const pT = getBlueHandlePosition(elapsed);
-
-      handleBoundary.setAttribute('cx', pB.x.toFixed(2));
-      handleBoundary.setAttribute('cy', pB.y.toFixed(2));
-
-      handleTotal.setAttribute('cx', pT.x.toFixed(2));
-      handleTotal.setAttribute('cy', pT.y.toFixed(2));
-
       handleBoundary.style.display = showHandles ? 'block' : 'none';
       handleTotal.style.display = showHandles ? 'block' : 'none';
+
+      if(showHandles){
+        const gripR = baseRO - bandThickness/2; // mittig im äußersten Band
+        const boundaryDeg = minuteDegOf(state.breakSec);
+        const totalDeg = minuteDegOf(state.totalSec);
+        const pB = polar(110,110,gripR, boundaryDeg);
+        const pT = polar(110,110,gripR, totalDeg);
+        handleBoundary.setAttribute('cx', pB.x.toFixed(2));
+        handleBoundary.setAttribute('cy', pB.y.toFixed(2));
+        handleTotal.setAttribute('cx', pT.x.toFixed(2));
+        handleTotal.setAttribute('cy', pT.y.toFixed(2));
+      }
     }
 
     function updateUI(){
-      const elapsed = currentElapsed();
-
+      const elapsed=currentElapsed();
       updateDial(elapsed);
-
-      if(state.running){
-        mainBtn.classList.add('pauseState');
-        mainBtn.setAttribute('aria-label', 'Timer pausieren');
-      }else{
-        mainBtn.classList.remove('pauseState');
-        mainBtn.setAttribute('aria-label', 'Timer starten');
-      }
+      startBtn.textContent = state.running ? 'Pause' : 'Start';
+      resetBtn.style.display = state.running ? 'none' : 'inline-block';
     }
 
-    let ticker = null;
-
+    // Start/Pause/Timer
+    let ticker=null;
     function start(){
-      if(state.running){
-        return;
-      }
-
-      if(state.started && currentElapsed() >= state.totalSec){
-        state.started = false;
-        state.t0 = 0;
-        state.pausedAcc = 0;
-        state.pauseStart = 0;
-      }
-
       if(!state.started){
-        state.started = true;
-        state.t0 = Date.now();
-        state.pausedAcc = 0;
-        state.pauseStart = 0;
-
-        state.lastPhase = state.workSec > 0
-          ? 'work'
-          : (state.totalSec > 0 ? 'break' : 'done');
-
-      }else{
+        state.started=true;
+        state.t0=Date.now();
+        state.pausedAcc=0;
+        state.lastPhase = state.workSec>0 ? 'work' : (state.totalSec>0 ? 'break' : 'done');
+      } else if(!state.running){
         if(state.pauseStart){
-          state.pausedAcc += Date.now() - state.pauseStart;
-          state.pauseStart = 0;
+          state.pausedAcc += Date.now()-state.pauseStart;
+          state.pauseStart=0;
         }
       }
-
-      state.running = true;
-
-      if(ticker){
-        clearInterval(ticker);
+      if(!state.running){
+        state.running=true;
+        if(ticker) clearInterval(ticker);
+        ticker=setInterval(tick, 200);
       }
-
-      ticker = setInterval(tick, 200);
-
       updateUI();
     }
 
     function pause(){
-      if(!state.running){
-        return;
-      }
-
-      state.running = false;
-      state.pauseStart = Date.now();
-
-      if(ticker){
-        clearInterval(ticker);
-        ticker = null;
-      }
-
+      if(!state.running) return;
+      state.running=false;
+      state.pauseStart=Date.now();
+      if(ticker) clearInterval(ticker);
+      ticker=null;
       updateUI();
     }
 
-    function toggleTimer(){
-      if(state.running){
-        pause();
-      }else{
-        start();
-      }
-    }
-
     function tick(){
-      const elapsed = currentElapsed();
+      const elapsed=currentElapsed();
       const phase = getPhase(elapsed);
-
       if(phase !== state.lastPhase){
         state.lastPhase = phase;
         onPhaseChange(phase);
       }
-
-      if(elapsed >= state.totalSec){
+      if(elapsed>=state.totalSec){
         updateUI();
-
         clearInterval(ticker);
-        ticker = null;
-
-        state.running = false;
-
-        updateUI();
-
+        ticker=null;
+        state.running=false;
         return;
       }
-
       updateUI();
     }
 
-    let dragging = false;
-    let dragMode = null;
-
-    function getHandlePositions(){
-      const cx = 110;
-      const cy = 110;
-      const gripROuter = 86;
-
-      const boundaryDeg = Math.min(360, (state.breakSec / 3600) * 360);
-
-      return {
-        boundary: polar(cx, cy, gripROuter, boundaryDeg),
-        total: getBlueHandlePosition(currentElapsed())
-      };
+    // Reset auf 30 Minuten Gesamt, 7 Minuten Auszeit
+    function hardResetTo30_7(){
+      if(ticker){ clearInterval(ticker); ticker=null; }
+      state.started=false;
+      state.running=false;
+      state.t0=0;
+      state.pausedAcc=0;
+      state.pauseStart=0;
+      state.totalSec = clampTotalMin(30)*60; // 30 Minuten Gesamt
+      state.breakSec = 7*60;                 // 7 Minuten Auszeit
+      state.workSec  = state.totalSec - state.breakSec; // 23 Minuten Arbeit
+      state.lastPhase = 'work';
+      breakBig.textContent = Math.floor(state.breakSec/60);
+      updateUI();
+      save();
     }
 
-    function nearestHandle(info){
-      const pos = getHandlePositions();
-
-      const dB = Math.hypot(info.vx - pos.boundary.x, info.vy - pos.boundary.y);
-      const dT = Math.hypot(info.vx - pos.total.x, info.vy - pos.total.y);
-
+    // Drag-Logik (Minuten im aktuellen 60‑Min‑Band)
+    let dragging=false, dragMode=null; // 'boundary' | 'total'
+    function circDist(a,b){ const d=Math.abs(a-b); return Math.min(d,360-d); }
+    function nearestHandle(deg){
+      const dB = circDist(deg, minuteDegOf(state.breakSec));
+      const dT = circDist(deg, minuteDegOf(state.totalSec));
       return dB <= dT ? 'boundary' : 'total';
     }
 
-    function totalMinFromPointer(info){
-      if(info.radius < 74){
-        return clamp(60 + Math.round(info.deg / 6), 61, MAX_TOTAL_MIN);
-      }
-
-      let m = Math.round(info.deg / 6);
-
-      if(m === 0 && info.deg > 300){
-        m = 60;
-      }
-
-      if(m === 0){
-        m = 1;
-      }
-
-      return clamp(m, 1, 60);
-    }
-
-    function applyDrag(info){
-      const elapsed = currentElapsed();
-
-      if(dragMode === 'boundary'){
-        const maxBoundaryDeg = Math.min(360, (state.totalSec / 3600) * 360);
-        const d = clamp(info.deg, 0, maxBoundaryDeg);
-
-        const maxBreakMin = Math.min(60, Math.floor(state.totalSec / 60));
-        const breakMin = clamp(Math.round(d / 6), 0, maxBreakMin);
-
-        state.breakSec = breakMin * 60;
-        state.workSec = state.totalSec - state.breakSec;
-
-      }else{
-        const desiredRemainingMin = totalMinFromPointer(info);
-
-        const maxRemainingWholeMin = Math.max(
-          1,
-          Math.floor((MAX_TOTAL_MIN * 60 - elapsed) / 60)
-        );
-
-        const remainingMin = clamp(
-          desiredRemainingMin,
-          1,
-          maxRemainingWholeMin
-        );
-
-        const desiredRemainingSec = remainingMin * 60;
-
-        const keepGreen = state.breakSec;
-
-        state.totalSec = elapsed + desiredRemainingSec;
-
-        state.breakSec = Math.min(
-          keepGreen,
-          desiredRemainingSec,
-          60 * 60
-        );
-
-        state.workSec = state.totalSec - state.breakSec;
-
-        const remWorkSec = Math.max(0, state.workSec - elapsed);
-        const roundedRemWorkSec = Math.round(remWorkSec / 60) * 60;
-
-        state.workSec = elapsed + roundedRemWorkSec;
-        state.totalSec = state.workSec + state.breakSec;
-      }
-
-      breakBig.textContent = Math.floor(state.breakSec / 60);
-
-      updateUI();
-    }
-
-    dial.addEventListener('pointerdown', (e) => {
-      if(state.running){
-        return;
-      }
-
+    dial.addEventListener('pointerdown', (e)=>{
+      if(state.running) return;
       e.preventDefault();
-
-      const info = pointerInfo(e);
-
-      dragMode = nearestHandle(info);
-      dragging = true;
-
+      const deg = angleFromPointer(e);
+      dragMode = nearestHandle(deg);
+      dragging=true;
       dial.setPointerCapture?.(e.pointerId);
 
-      applyDrag(info);
+      if(dragMode==='boundary'){
+        const bandMinutes = ((state.totalSec % 3600) || 3600) / 60;
+        const breakMinInBand = clamp(Math.round(deg/6), 0, bandMinutes);
+        const breakHours = Math.min(Math.floor(state.breakSec/3600), Math.floor(state.totalSec/3600));
+        state.breakSec = Math.min(breakHours*3600 + breakMinInBand*60, state.totalSec);
+        state.workSec = state.totalSec - state.breakSec;
+      }else{ // total
+        const hoursMin = Math.floor(state.totalSec/3600)*60;
+        const tMinInBand = clamp(Math.round(deg/6), 1, 60);
+        const newTotalMin = clampTotalMin(hoursMin + tMinInBand);
+        const keepGreen = state.breakSec;
+        state.totalSec = newTotalMin*60;
+        state.breakSec = Math.min(keepGreen, state.totalSec);
+        state.workSec = state.totalSec - state.breakSec;
+      }
+      breakBig.textContent = Math.floor(state.breakSec/60);
+      updateUI();
     }, {passive:false});
 
-    dial.addEventListener('pointermove', (e) => {
-      if(!dragging || state.running){
-        return;
-      }
-
+    dial.addEventListener('pointermove', (e)=>{
+      if(!dragging || state.running) return;
       e.preventDefault();
+      const deg = angleFromPointer(e);
 
-      const info = pointerInfo(e);
-
-      applyDrag(info);
+      if(dragMode==='boundary'){
+        const bandMinutes = ((state.totalSec % 3600) || 3600) / 60;
+        const breakMinInBand = clamp(Math.round(deg/6), 0, bandMinutes);
+        const breakHours = Math.min(Math.floor(state.breakSec/3600), Math.floor(state.totalSec/3600));
+        state.breakSec = Math.min(breakHours*3600 + breakMinInBand*60, state.totalSec);
+        state.workSec = state.totalSec - state.breakSec;
+      }else{
+        const hoursMin = Math.floor(state.totalSec/3600)*60;
+        const tMinInBand = clamp(Math.round(deg/6), 1, 60);
+        const newTotalMin = clampTotalMin(hoursMin + tMinInBand);
+        const keepGreen = state.breakSec;
+        state.totalSec = newTotalMin*60;
+        state.breakSec = Math.min(keepGreen, state.totalSec);
+        state.workSec = state.totalSec - state.breakSec;
+      }
+      breakBig.textContent = Math.floor(state.breakSec/60);
+      updateUI();
     }, {passive:false});
 
     function endDrag(e){
-      if(!dragging){
-        return;
-      }
-
-      dragging = false;
-      dragMode = null;
-
+      if(!dragging) return;
+      dragging=false;
+      dragMode=null;
       dial.releasePointerCapture?.(e.pointerId);
-
       save();
     }
-
     dial.addEventListener('pointerup', endDrag);
     dial.addEventListener('pointercancel', endDrag);
+    window.addEventListener('blur', ()=>{ dragging=false; dragMode=null; });
 
-    window.addEventListener('blur', () => {
-      dragging = false;
-      dragMode = null;
-    });
-
+    // Auszeit ± (grün)
     function stepBreak(delta){
-      const maxBreakMin = Math.min(60, Math.floor(state.totalSec / 60));
-      const v = clamp(Math.floor(state.breakSec / 60) + delta, 0, maxBreakMin);
-
-      state.breakSec = v * 60;
+      const v = clamp(Math.floor(state.breakSec/60)+delta, 0, Math.floor(state.totalSec/60));
+      state.breakSec = v*60;
       state.workSec = state.totalSec - state.breakSec;
-
       breakBig.textContent = v;
-
       updateUI();
       save();
     }
-
     function addRepeater(btn, fn){
-      let h = null;
-      let r = null;
-
-      const down = (e) => {
-        e.preventDefault();
-
-        fn();
-
-        h = setTimeout(() => {
-          r = setInterval(fn, 120);
-        }, 400);
-      };
-
-      const up = () => {
-        clearTimeout(h);
-        clearInterval(r);
-
-        h = null;
-        r = null;
-      };
-
+      let h=null, r=null;
+      const down=(e)=>{ e.preventDefault(); fn(); h=setTimeout(()=>{ r=setInterval(fn,120); },400); };
+      const up=()=>{ clearTimeout(h); clearInterval(r); h=null; r=null; };
       btn.addEventListener('pointerdown', down, {passive:false});
       window.addEventListener('pointerup', up);
       window.addEventListener('pointercancel', up);
       window.addEventListener('blur', up);
     }
+    addRepeater(breakPlus, ()=>stepBreak(+1));
+    addRepeater(breakMinus, ()=>stepBreak(-1));
 
-    addRepeater(breakPlus, () => stepBreak(+1));
-    addRepeater(breakMinus, () => stepBreak(-1));
+    // Gesamtzeit ±60 Minuten
+    function stepTotalHour(deltaHours){
+      if(state.running) return;
+      const tMin = clampTotalMin(Math.floor(state.totalSec/60) + deltaHours*60);
+      const keepGreen = state.breakSec;
+      state.totalSec = tMin*60;
+      state.breakSec = Math.min(keepGreen, state.totalSec);
+      state.workSec  = state.totalSec - state.breakSec;
+      breakBig.textContent = Math.floor(state.breakSec/60);
+      updateUI();
+      save();
+    }
+    totalPlus60.addEventListener('click', ()=>stepTotalHour(+1));
+    totalMinus60.addEventListener('click', ()=>stepTotalHour(-1));
 
-    mainBtn.addEventListener('click', toggleTimer);
+    // Buttons
+    startBtn.addEventListener('click', ()=> state.running ? pause() : start());
+    resetBtn.addEventListener('click', hardResetTo30_7);
 
+    // Init
     updateUI();
   </script>
 </body>
