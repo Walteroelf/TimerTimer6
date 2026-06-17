@@ -199,7 +199,6 @@
 
           <circle cx="110" cy="110" r="104" fill="currentColor" opacity="0.06"/>
           <circle cx="110" cy="110" r="100" fill="#fff" stroke="currentColor" stroke-width="3"/>
-          <g id="ticks"></g>
 
           <path id="arcGreen" fill="var(--green)" opacity="0.92"/>
           <path id="arcRed" fill="var(--red)" opacity="0.92"/>
@@ -207,6 +206,9 @@
           <circle id="innerFill" cx="110" cy="110" r="72" fill="transparent" opacity="0.92"/>
 
           <path id="arcRed2" fill="var(--red2)" opacity="0.95"/>
+
+          <!-- Minuten-Skala immer im Vordergrund -->
+          <g id="ticks"></g>
 
           <text id="centerLabel" x="110" y="95" text-anchor="middle"
                 style="font: 800 17px/1.1 ui-sans-serif, system-ui, -apple-system, Segoe UI; fill: #fff;">
@@ -372,7 +374,7 @@
         line.setAttribute('y2', y2.toFixed(2));
         line.setAttribute('stroke', 'currentColor');
         line.setAttribute('stroke-width', i % 5 === 0 ? '2' : '1');
-        line.setAttribute('opacity', i % 5 === 0 ? '0.65' : '0.45');
+        line.setAttribute('opacity', i % 5 === 0 ? '0.95' : '0.8');
 
         ticksG.appendChild(line);
       }
@@ -607,7 +609,6 @@
 
       centerTotalTime.textContent = `${mm}:${ss}`;
 
-      // Gesamtzeit-Anzeige immer schwarz
       centerTotalLabel.setAttribute('fill', '#000');
       centerTotalTime.setAttribute('fill', '#000');
     }
