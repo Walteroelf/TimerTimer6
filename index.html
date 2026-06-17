@@ -164,15 +164,13 @@
     <div class="dialCard">
       <div class="dialWrap">
         <svg id="dial" class="dial" viewBox="0 0 220 220" role="img" aria-label="Eieruhr mit 60‑Minuten‑Skala">
-          <!-- Hintergrund -->
+          <!-- Zifferblatt und Ticks (ruhig) -->
           <circle cx="110" cy="110" r="104" fill="currentColor" opacity="0.06"/>
           <circle cx="110" cy="110" r="100" fill="#fff" stroke="currentColor" stroke-width="3"/>
-
-          <!-- Segmente: dynamisch in mehreren Bändern (HINTER der Skala) -->
-          <g id="arcsLayer"></g>
-
-          <!-- Skala: IMMER VORN -->
           <g id="ticks"></g>
+
+          <!-- Segmente: dynamisch in mehreren Bändern -->
+          <g id="arcsLayer"></g>
 
           <!-- Innerer Kreis (Farbe = aktuelle Phase) -->
           <circle id="innerFill" cx="110" cy="110" r="72" fill="transparent" opacity="0.92"/>
@@ -292,7 +290,7 @@
     state.workSec = state.totalSec - state.breakSec;
     breakBig.textContent = Math.floor(state.breakSec/60);
 
-    // Ticks (ruhig) – werden nach arcsLayer gezeichnet und liegen damit VORN
+    // Ticks (ruhig)
     (function drawTicks(){
       const cx=110, cy=110, rOuter=100, long=12, short=6;
       for(let i=0;i<60;i++){
@@ -457,7 +455,7 @@
         const gDeg = secToDeg(gThis);
         const rDeg = secToDeg(rThis);
 
-        // Reihenfolge: GRÜN (vorn), dann ROT
+        // Reihenfolge wie im Original: erst GRÜN (vorne), dann ROT
         if(gDeg > 0) addArcPath(arcsLayer, colGreen, rO, rI, 0, gDeg);
         if(rDeg > 0) addArcPath(arcsLayer, colRed,   rO, rI, gDeg, gDeg + rDeg);
 
@@ -574,9 +572,9 @@
       state.t0=0;
       state.pausedAcc=0;
       state.pauseStart=0;
-      state.totalSec = clampTotalMin(30)*60; // 30 Minuten Gesamt
-      state.breakSec = 7*60;                 // 7 Minuten Auszeit
-      state.workSec  = state.totalSec - state.breakSec; // 23 Minuten Arbeit
+      state.totalSec = clampTotalMin(30)*60;
+      state.breakSec = 7*60;
+      state.workSec  = state.totalSec - state.breakSec;
       state.lastPhase = 'work';
       breakBig.textContent = Math.floor(state.breakSec/60);
       updateUI();
@@ -607,8 +605,8 @@
         state.breakSec = Math.min(breakHours*3600 + breakMinInBand*60, state.totalSec);
         state.workSec = state.totalSec - state.breakSec;
       }else{ // total
-        const hoursMin = Math.floor(state.totalSec/3600)*60;
-        const tMinInBand = clamp(Math.round(deg/6), 1, 60);
+        const hoursMin = Math.floor(state.totalSec/3600)*60; // ganze Stunden in Minuten
+        const tMinInBand = clamp(Math.round(deg/6), 1, 60);  // 1..60 -> erlaubt „genau 60“
         const newTotalMin = clampTotalMin(hoursMin + tMinInBand);
         const keepGreen = state.breakSec;
         state.totalSec = newTotalMin*60;
